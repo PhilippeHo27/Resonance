@@ -6,16 +6,19 @@ public class AlgoInit : MonoBehaviour
 {
     private List<IFrequencyAnalyzer> _algorithms = new List<IFrequencyAnalyzer>();
 
+    [SerializeField] private TempoFinder _tempoFinder;
     private void Awake()
     {
-        _algorithms.Add(new ColoringFrequencies());
-        _algorithms.Add(new TempoFinder());
+        //_algorithms.Add(new ColoringFrequencies());
 
-        foreach (var algorithm in _algorithms)
+        if (_algorithms.Count != 0)
         {
-            algorithm.Subscribe(SingleTonDumpsterForNow.Instance.audioProcessor);
+            foreach (var algorithm in _algorithms)
+            {
+                algorithm.Subscribe(SingletonDumpster.Instance.audioProcessor);
+            }
         }
-        
-        
+
+        _tempoFinder.Subscribe(SingletonDumpster.Instance.audioProcessor);
     }
 }

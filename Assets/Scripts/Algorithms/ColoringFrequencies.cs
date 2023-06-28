@@ -12,14 +12,14 @@ public class ColoringFrequencies : IFrequencyAnalyzer
 
     private void HandleFrequencyDataAvailable(List<float> frequencies)
     {
-        SingleTonDumpsterForNow.Instance.coloring = Analyze(frequencies);
+        SingletonDumpster.Instance.coloring = Analyze(frequencies);
     }
 
     public Color Analyze(List<float> frequencies)
     {
         if (!frequencies.Any()) 
         {
-            return Color.black; 
+            return Color.white; 
         }
 
         float averageFrequency = frequencies.Average();
