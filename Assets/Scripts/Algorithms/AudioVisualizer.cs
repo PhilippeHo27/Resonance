@@ -53,7 +53,7 @@ public class AudioVisualizer : MonoBehaviour
     
     private void OnEnable()
     {
-        SingletonDumpster.Instance.audioProcessor.SpectrumData += Visualizer;
+        SingletonDumpster.Instance.audioProcessor.SpectrumData += DisplayVisualizer;
     }
 
     private void VisualSorter(ShapeOfVisuals shape)
@@ -64,9 +64,9 @@ public class AudioVisualizer : MonoBehaviour
         }
     }
     
-    private void Visualizer(float[] samples)
+    private void DisplayVisualizer(float[] samples)
     {
-        int groupSize = samples.Length / NumberOfGameObjects; // allegedly no impact at all on performance because of JIT compiler... we shall see
+        int groupSize = samples.Length / NumberOfGameObjects / 2; // allegedly no impact at all on performance because of JIT compiler... we shall see
         float[] avgSamples = new float[NumberOfGameObjects];
 
         // Calculate average for each group
@@ -90,20 +90,43 @@ public class AudioVisualizer : MonoBehaviour
         }
     }
 
+    #region Visualizer's Look
+
+    // private void InstantiateLine()
+    // {
+    //     float cubeSpacing = sampleCubePrefab.transform.localScale.x / 2 + spacing;;
+    //
+    //     for (int i = 0; i < _sampleCubes.Length; i++)
+    //     {
+    //         GameObject cube = Instantiate(sampleCubePrefab);
+    //         cube.transform.position = new Vector3(i * cubeSpacing, transform.position.y, transform.position.z);
+    //         cube.transform.parent = transform;
+    //         cube.name = "SampleCube" + i;
+    //         _sampleCubes[i] = cube;
+    //         _meshRenderers[i] = _sampleCubes[i].GetComponent<MeshRenderer>();
+    //     }
+    // }
+    
     private void InstantiateLine()
     {
-        float cubeSpacing = sampleCubePrefab.transform.localScale.x / 2 + spacing;;
-    
+        float cubeSpacing = sampleCubePrefab.transform.localScale.x / 2 + spacing;
+
+        // Frequency range for each cube assuming 1024 cubes from 8192 bins FFT with a sample rate of 44100 Hz
+        float cubeFreqRange = (44100f / 8192f) * (8192f / 1024f / 2); 
+
         for (int i = 0; i < _sampleCubes.Length; i++)
         {
             GameObject cube = Instantiate(sampleCubePrefab);
             cube.transform.position = new Vector3(i * cubeSpacing, transform.position.y, transform.position.z);
             cube.transform.parent = transform;
-            cube.name = "SampleCube" + i;
+            float cubeFreqStart = i * cubeFreqRange; // Starting frequency of this cube's range
+            float cubeFreqEnd = (i+1) * cubeFreqRange; // Ending frequency of this cube's range
+            cube.name = $"SampleCube{i} ({cubeFreqStart}Hz - {cubeFreqEnd}Hz)";
             _sampleCubes[i] = cube;
             _meshRenderers[i] = _sampleCubes[i].GetComponent<MeshRenderer>();
         }
     }
+
     
     private void InstantiateSquare()
     {
@@ -151,4 +174,7 @@ public class AudioVisualizer : MonoBehaviour
             }
         }
     }
+
+    #endregion
+    
 }

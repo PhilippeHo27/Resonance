@@ -27,7 +27,7 @@ public class InputExamples : MonoBehaviour
         InputManager.Instance.InputActionHandlers["1"].Canceled += _ => { Debug.Log("Canceled"); };
     
         //Example with a void method
-        InputManager.Instance.InputActionHandlers["2"].Canceled += _ => ExampleOne();
+        InputManager.Instance.InputActionHandlers["2"].Started += _ => ExampleOne();
         
         //Example with string method
         InputManager.Instance.InputActionHandlers["T"].Performed += _ =>

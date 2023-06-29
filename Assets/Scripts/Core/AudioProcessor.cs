@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using System;
 using System.Linq;
+
 public class AudioProcessor : MonoBehaviour
 {
-    private const int SampleRate = 44100; //The sample rate is 44100 Hz
-    private const int Bins = 8192; // Size of FFT, must be power of 2
-    private float[] _spectrum = new float[Bins]; // Buffer for FFT data
+    private const int SampleRate = 44100;
+    private const int Bins = 8192; // Size of FFT must be power of 2
+    private float[] _spectrum = new float[Bins]; 
+    private float _frequencyStep;
 
     // For the spectrum data from the previous frame
     private List<float> _prevSpectrum = Enumerable.Repeat(0f, Bins).ToList();
@@ -19,71 +21,72 @@ public class AudioProcessor : MonoBehaviour
     private void Start()
     {
         StartCoroutine(ProcessAudio(FFTWindow.BlackmanHarris));
+        
+        // Step size for each frequency bin (delta Hz per Bins[i])
+        _frequencyStep = SampleRate / 2f / _spectrum.Length;
     }
 
     private void OnlyFFT(FFTWindow windowType)
     {
-        //fast fourier calculations
         AudioListener.GetSpectrumData(_spectrum, 0, windowType);
     }
 
-    public List<float> FindFrequenciesFromFFT()
+    public List<float> PruneLowEnergyFrequencies()
     {
         List<float> frequencies = new List<float>();
-
-        // Step size for each frequency bin (delta Hz per Bins[i])
-        float freqStep = SampleRate / 2f / _spectrum.Length;
-
         for (int i = 0; i < _spectrum.Length; i++)
         {
-            // If there is a significant amount of energy in this frequency bin consider it a detected frequency.
-            // This threshold may need adjustment for your specific application.
-            if (_spectrum[i] > 0.01f)
+            if (_spectrum[i] > 0.01f) // Under 0.01f is noise
             {
-                // Compute the frequency for this bin and add it to the list
-                float frequency = i * freqStep;
+                float frequency = i * _frequencyStep;
                 frequencies.Add(frequency);
             }
         }
-
         return frequencies;
     }
 
-    public float FindSpectralFlux()
+    private float FindSpectralFlux(out float totalSpectralFlux)
     {
-        // Compute the spectral flux
+        // Frequency threshold in hz
+        float frequencyThreshold = 300f;
+
         float spectralFlux = 0f;
+        totalSpectralFlux = 0f;
+
         for (int i = 0; i < _spectrum.Length; i++)
         {
-            // Compute the change in energy in this bin
+            float frequency = i * _frequencyStep;
             float delta = _spectrum[i] - _prevSpectrum[i];
-        
-            // Only consider increases in energy
+
             if (delta > 0)
             {
-                spectralFlux += delta;
+                totalSpectralFlux += delta; // Total spectral flux without threshold
+                if(frequency < frequencyThreshold)
+                {
+                    spectralFlux += delta; // Spectral flux under frequency threshold
+                }
             }
         }
 
-        // Update the previous spectrum
         _prevSpectrum = new List<float>(_spectrum);
 
-        // return the spectral flux value
         return spectralFlux;
     }
+
 
     private IEnumerator ProcessAudio(FFTWindow windowType)
     {
         while (true)
         {
             OnlyFFT(windowType);
-            FrequencyData?.Invoke(FindFrequenciesFromFFT());
-            SpectralFluxData?.Invoke(FindSpectralFlux());
+            FrequencyData?.Invoke(PruneLowEnergyFrequencies());
+            SpectralFluxData?.Invoke(FindSpectralFlux(out _));
             SpectrumData?.Invoke(_spectrum);
 
-            //x times per second
-            yield return new WaitForSeconds(0.025f);
+            FindSpectralFlux(out SingletonDumpster.Instance.spectralFluxOfEntireTrack);
+            
+            //process rate
+            yield return new WaitForSeconds(0.01667f );
         }
     }
-
 }

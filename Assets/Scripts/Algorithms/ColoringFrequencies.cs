@@ -12,7 +12,8 @@ public class ColoringFrequencies : IFrequencyAnalyzer
 
     private void HandleFrequencyDataAvailable(List<float> frequencies)
     {
-        SingletonDumpster.Instance.coloring = Analyze(frequencies);
+        // turned off for testing other crap
+        //SingletonDumpster.Instance.coloring = Analyze(frequencies);
     }
 
     public Color Analyze(List<float> frequencies)
