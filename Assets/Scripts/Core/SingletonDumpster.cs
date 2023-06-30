@@ -1,26 +1,32 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Audio;
 
 public class SingletonDumpster : IndestructibleSingletonBehaviour<SingletonDumpster>
 {
-    // variables that might be fun to access from anywehere
-    public Color coloring;
     public AudioProcessor audioProcessor;
-    public float frequencyThresholdTweaker;
-    public float spectralFluxOfEntireTrack;
+    public MicrophoneInput microphone;
+    public RuntimeAudioLoader audioLoader;
+    public TempoFinder tempoFinder;
+    public AudioSource audioSource;
+    public AudioMixer audioMixer;
     
+    //variables idk where to put
+    [HideInInspector] public float spectralFluxOfEntireTrack;
+    public float frequencyThresholdTweaker; // this is to maybe tweak the value for FindSpectralFlux
+    public Color coloring;
+
     
-    
-    
-    // initalizing algorithms, possible transfer these into a more suitable singleton. Ideally, somehow make it so none of them use gameobjects
-    // look at how it was done in the internship examples
     private List<IFrequencyAnalyzer> _algorithms = new List<IFrequencyAnalyzer>();
-    [SerializeField] private TempoFinder _tempoFinder;
 
     protected override void OnSingletonAwake()
     {
-        _algorithms.Add(new ColoringFrequencies());
+        tempoFinder.Subscribe(audioProcessor);
 
+        //ok this block of crap below is for when / if there's more IFrequencyAnalysers.
+        //Before I started this, I thought it was all going to be about frequencies
+        //Turns out it's not... so this might be refactored, interface is looking grim.
+        _algorithms.Add(new ColoringFrequencies());
         if (_algorithms.Count != 0)
         {
             foreach (var algorithm in _algorithms)
@@ -28,7 +34,5 @@ public class SingletonDumpster : IndestructibleSingletonBehaviour<SingletonDumps
                 algorithm.Subscribe(audioProcessor);
             }
         }
-
-        _tempoFinder.Subscribe(audioProcessor);
     }
 }

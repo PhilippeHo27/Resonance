@@ -1,93 +1,124 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Networking;
 
 public class RuntimeAudioLoader : MonoBehaviour
 {
-    public AudioSource audioSource;
-    private Queue<string> audioPaths = new Queue<string>();
-    private bool isPlaying = false;
-    public AudioClip audioClip;
-    private float[] audioData;
+    private Dictionary<string, AudioClip> audioClips = new Dictionary<string, AudioClip>();
 
-    // private void Start()
-    // {
-    //     string path = Application.persistentDataPath; // change this to the directory you want
-    //     LoadAllAudioFiles(path);
-    //
-    //     if (audioPaths.Count > 0)
-    //         PlayNextAudio();
-    //     
-    //     // Load the AudioClip
-    //     audioClip = Resources.Load<AudioClip>("YourAudioFile"); // Replace with your audio file's name
-    //
-    //     if (audioClip == null)
-    //     {
-    //         Debug.LogError("Failed to load AudioClip.");
-    //         return;
-    //     }
-    //
-    //     // Fetch the audio data from the clip
-    //     audioData = new float[audioClip.samples * audioClip.channels];
-    //     audioClip.GetData(audioData, 0);    
-    // }
-
+    // This will hold the path to the folder where we'll look for music files
+    private string musicFolderPath;
+    
+    
+    private const int MaxSimultaneousLoads = 10;
+    private Queue<string> audioFileQueue = new Queue<string>();
+    private int currentLoads = 0;
+    
+    
     private void Start()
     {
+        // TODO: RENABLE ONCE YOU WANNA TEST!!!!
+        // musicFolderPath = Path.Combine(Application.dataPath, "Music");
+        // Directory.CreateDirectory(musicFolderPath);
         
+        //load from resource folder
+        LoadAllAudioFilesFromResources();
+        SingletonDumpster.Instance.audioSource.clip = GetAudioClip("ME_Black_Coffee_Keinemusik_-_The_Rapture_Pt.III_Original_Mix");
+        SingletonDumpster.Instance.audioSource.Play();
     }
+    
 
-    private void LoadAllAudioFiles(string path)
+    private void LoadAllAudioFilesFromResources()
     {
-        var info = new DirectoryInfo(path);
-        var fileInfo = info.GetFiles();
-        foreach (var file in fileInfo)
+        AudioClip[] clips = Resources.LoadAll<AudioClip>("Audio");
+        foreach (var clip in clips)
         {
-            if (file.Extension.ToLower() == ".mp3")
-            {
-                audioPaths.Enqueue("file://" + file.FullName);
-            }
+            audioClips.Add(clip.name, clip);
+        }
+    }
+    
+    private void LoadAudioFilesFromFolder()
+    {
+        // Get the full path to each audio file in the folder
+        string[] mp3FilePaths = Directory.GetFiles(musicFolderPath, "*.mp3");
+        string[] wavFilePaths = Directory.GetFiles(musicFolderPath, "*.wav");
+        string[] aiffFilePaths = Directory.GetFiles(musicFolderPath, "*.aiff");
+
+        // Combine the arrays of file paths
+        string[] audioFilePaths = mp3FilePaths.Concat(wavFilePaths).Concat(aiffFilePaths).ToArray();
+
+        // Queue each audio file
+        foreach (string filePath in audioFilePaths)
+        {
+            audioFileQueue.Enqueue(filePath);
+        }
+
+        // Start the first files loading
+        while (audioFileQueue.Count > 0 && currentLoads < MaxSimultaneousLoads)
+        {
+            StartCoroutine(LoadAudioFile(audioFileQueue.Dequeue()));
+            currentLoads++;
         }
     }
 
-    private void PlayNextAudio()
+    private IEnumerator LoadAudioFile(string filePath)
     {
-        if (audioPaths.Count > 0)
+        // Determine audio type
+        AudioType audioType;
+        string extension = Path.GetExtension(filePath).ToLower();
+        switch (extension)
         {
-            StartCoroutine(LoadAudio(audioPaths.Dequeue(), audioClip =>
-            {
-                audioSource.clip = audioClip;
-                audioSource.Play();
-                isPlaying = true;
-            }));
+            case ".mp3":
+                audioType = AudioType.MPEG;
+                break;
+            case ".wav":
+                audioType = AudioType.WAV;
+                break;
+            case ".aiff":
+                audioType = AudioType.AIFF;
+                break;
+            default:
+                yield break;  // Skip unknown file types
         }
-    }
 
-    IEnumerator LoadAudio(string path, System.Action<AudioClip> result)
-    {
-        using (var request = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.MPEG))
+        using (UnityWebRequest request = UnityWebRequestMultimedia.GetAudioClip("file://" + filePath, audioType))
         {
             yield return request.SendWebRequest();
             if (request.result == UnityWebRequest.Result.Success)
             {
-                result(DownloadHandlerAudioClip.GetContent(request));
+                string clipName = Path.GetFileNameWithoutExtension(filePath);
+                audioClips.Add(clipName, DownloadHandlerAudioClip.GetContent(request));
             }
             else
             {
                 Debug.Log(request.error);
             }
         }
+
+        currentLoads--;
+
+        // Start the next file loading, if any
+        while (audioFileQueue.Count > 0 && currentLoads < MaxSimultaneousLoads)
+        {
+            StartCoroutine(LoadAudioFile(audioFileQueue.Dequeue()));
+            currentLoads++;
+        }
     }
 
-    private void Update()
+
+    public AudioClip GetAudioClip(string name)
     {
-        // Check if the song has finished playing, then play the next song
-        if (isPlaying && !audioSource.isPlaying)
+        if (audioClips.ContainsKey(name))
         {
-            isPlaying = false;
-            PlayNextAudio();
+            return audioClips[name];
+        }
+        else
+        {
+            Debug.LogError($"No audio clip with the name {name} found!");
+            return null;
         }
     }
 }

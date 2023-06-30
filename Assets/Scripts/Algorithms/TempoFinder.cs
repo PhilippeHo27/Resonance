@@ -47,7 +47,6 @@ public class TempoFinder : MonoBehaviour
             _timeSinceLastBeat = 0f;
         }
 
-        Debug.Log(ShowBPM());
         text.text = ShowBPM();
     }
 
