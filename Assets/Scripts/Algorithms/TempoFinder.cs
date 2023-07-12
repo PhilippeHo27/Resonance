@@ -12,7 +12,7 @@ public class TempoFinder : MonoBehaviour
     private const float MinBeatInterval = 0.24f; // Minimum time in seconds between beats
     private float _timeSinceLastBeat = 0f; // Time in seconds since the last beat
 
-    [SerializeField] TMP_Text text;
+    [SerializeField] TMP_Text text; // TODO HELLO CHANGE THIS NAME PLEASE
     public void Subscribe(AudioProcessor audioProcessor)
     {
         audioProcessor.SpectralFluxData += AnalyzeSpectralFlux;
@@ -43,7 +43,7 @@ public class TempoFinder : MonoBehaviour
             if (_beatTimes.Count > 5)
                 _beatTimes.Dequeue();
 
-            SingletonDumpster.Instance.coloring = new Color(Random.value, Random.value, Random.value, 1.0f);
+            AudioManager.Instance.coloring = new Color(Random.value, Random.value, Random.value, 1.0f);
             _timeSinceLastBeat = 0f;
         }
 

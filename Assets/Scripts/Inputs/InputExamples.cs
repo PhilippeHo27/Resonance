@@ -44,12 +44,12 @@ public class InputExamples : MonoBehaviour
 
     }
 
-    private void OnDisable()
+    private void OnEnable()
     {
         if (InputManager.Exists)
         {
-            InputManager.Instance.GameControls.AnotherMap.Disable();
-            InputManager.Instance.GameControls.Camera.Disable();
+            InputManager.Instance.GameControls.AnotherMap.Enable();
+            InputManager.Instance.GameControls.Camera.Enable();
         }
     }
 

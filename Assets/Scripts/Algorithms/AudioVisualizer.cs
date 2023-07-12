@@ -53,7 +53,7 @@ public class AudioVisualizer : MonoBehaviour
     
     private void OnEnable()
     {
-        SingletonDumpster.Instance.audioProcessor.SpectrumData += DisplayVisualizer;
+        AudioManager.Instance.audioProcessor.SpectrumData += DisplayVisualizer;
     }
 
     private void VisualSorter(ShapeOfVisuals shape)
@@ -85,7 +85,7 @@ public class AudioVisualizer : MonoBehaviour
             if (_sampleCubes[i] != null)
             {
                 _sampleCubes[i].transform.localScale = new Vector3(0.1f, (avgSamples[i] * 1000) + 0.1f, 0.1f);
-                _meshRenderers[i].material.color = SingletonDumpster.Instance.coloring;
+                _meshRenderers[i].material.color = AudioManager.Instance.coloring;
             }
         }
     }

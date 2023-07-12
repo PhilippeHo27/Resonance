@@ -83,7 +83,7 @@ public class AudioProcessor : MonoBehaviour
             SpectralFluxData?.Invoke(FindSpectralFlux(out _));
             SpectrumData?.Invoke(_spectrum);
 
-            FindSpectralFlux(out SingletonDumpster.Instance.spectralFluxOfEntireTrack);
+            FindSpectralFlux(out AudioManager.Instance.spectralFluxOfEntireTrack);
             
             //process rate
             yield return new WaitForSeconds(0.01667f );

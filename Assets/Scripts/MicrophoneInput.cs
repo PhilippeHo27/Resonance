@@ -19,11 +19,15 @@ public class MicrophoneInput : MonoBehaviour
             // Get the default microphone's name
             microphoneName = Microphone.devices[0];
         }
+        
+        // add keybind T for mic fuck it
+        InputManager.Instance.InputActionHandlers["T"].Started += _ => StartRecording();
+        InputManager.Instance.InputActionHandlers["T"].Canceled += _ => StopRecording();
     }
 
     public void StartRecording()
     {
-        audioClip = Microphone.Start(microphoneName, false, 100, 44100);
+        audioClip = Microphone.Start(microphoneName, false, maxLength, audioSampleRate);
         
         // you want to play it right away or later? right away would be weird
     }
