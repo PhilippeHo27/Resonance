@@ -54,7 +54,7 @@ public class TempoFinder : MonoBehaviour
     {
         if (_beatTimes.Count < 2) // We need at least two beats to calculate BPM
         {
-            return "Not enough beats to calculate BPM.";
+            return "...";
         }
 
         // Calculate average time difference between beats

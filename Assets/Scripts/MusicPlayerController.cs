@@ -44,7 +44,7 @@ public class MusicPlayerController : MonoBehaviour, IPointerClickHandler
             float progress = AudioManager.Instance.audioSource.time / length;
             trackPositionImage.fillAmount = progress;
             
-            yield return new WaitForSeconds(1.0f);
+            yield return new WaitForSeconds(0.05f);
         }
     }
     void OnDisable()

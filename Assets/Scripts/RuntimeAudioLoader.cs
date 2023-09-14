@@ -22,15 +22,19 @@ public class RuntimeAudioLoader : MonoBehaviour
         Directory.CreateDirectory(_musicFolderPath);
         LoadAudioFilesFromFolder();
         CreateWaveForm(AudioManager.Instance.audioSource.clip);
+        //AudioManager.Instance.audioSource.Pause();
+        
     }
 
     public void CreateWaveForm(AudioClip clip)
     {
-        Texture2D waveform = GenerateWaveform(clip,2048,128, Color.clear);
-        //Texture2D waveform = GenerateDualWaveform(clip, 2048, 128, Color.blue, Color.yellow, 0.25f);
-        Sprite sprite = Sprite.Create(waveform, new Rect(0,0,waveform.width,waveform.height), new Vector2(0.5f,0.5f));
+        Texture2D waveform = GenerateWaveform(clip, 2048, 128, Color.clear);
+        Rect spriteRect = new Rect(0, 0, waveform.width, waveform.height);
+        Vector4 border = new Vector4(10, 10, 10, 10); // Example border values
+        Sprite sprite = Sprite.Create(waveform, spriteRect, new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect, border);
         AudioManager.Instance.waveform.sprite = sprite;
     }
+
     
     private void LoadAudioFilesFromFolder()
     {

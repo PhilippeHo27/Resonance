@@ -43,12 +43,13 @@ public class AudioVisualizer : MonoBehaviour
             { ShapeOfVisuals.SquareTwo, InstantiateSquareTwo }
         };
 
-
         foreach (var type in visuals)
         {
             if (type.isActive)
                 VisualSorter(type.ShapeOfVisual);
         }
+        
+        //AudioManager.Instance.audioSource.Play();
     }
     
     private void OnEnable()
